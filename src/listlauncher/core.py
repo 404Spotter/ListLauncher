@@ -87,6 +87,6 @@ def get_items(name):
     return load_list(name)["items"]
 
 def describe_item(item):
-    if item["type"] == "path:":
-        return item["path:"]
+    if item["type"] == "path":
+        return item["path"]
     return shlex.join(item["run"])
