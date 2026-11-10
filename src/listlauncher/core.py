@@ -79,3 +79,14 @@ def run_list(name):
         except OSError as error:
             failed.append((item, str(error)))
     return failed
+
+# Get items from a List
+def get_items(name):
+    if not list_path(name).exists():
+        raise ListLauncherError(f"No list named '{name}'")
+    return load_list(name)["items"]
+
+def describe_item(item):
+    if item["type"] == "path:":
+        return item["path:"]
+    return shlex.join(item["run"])

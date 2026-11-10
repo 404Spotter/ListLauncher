@@ -42,10 +42,31 @@ def run(name: str):
     for item, reason in failed:
         typer.secho(f"Failed to launch {item}: {reason}", fg="yellow", err=True)
 
+@app.command()
+def view(name: str):
+    """View everything saved to a list."""
+    try:
+        items = core.get_items(name)
+    except core.ListLauncherError as error:
+        fail(error)
+
+    if not items:
+        typer.echo(f"'{name}' is empty. Add items with `listlauncher add {name} TARGET`")
+        return
+
+    typer.secho(name, bold=True)
+    for number, item in enumerate(items, start=1):
+        typer.echo(f"  {number}. [{item['type']}] {core.describe_item(item)}")
 
 def main():
-    # Treat `listlauncher list1` as `listlauncher run list1`
     commands = typer.main.get_command(app).commands
-    if len(sys.argv) > 1 and not sys.argv[1].startswith("-") and sys.argv[1] not in commands:
-        sys.argv.insert(1, "run")
+    args = sys.argv[1:]
+    if args and not args[0].startswith("-") and args[0] not in commands:
+        if len(args) > 1 and args[1] in commands:
+            # `listlauncher list1 add X` -> `listlauncher add list1 X`
+            sys.argv[1], sys.argv[2] = sys.argv[2], sys.argv[1]
+        else:
+            # `listlauncher list1` -> `listlauncher run list1`
+            sys.argv.insert(1, "run")
     app()
+
