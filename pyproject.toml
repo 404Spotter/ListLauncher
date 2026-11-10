@@ -7,7 +7,10 @@ authors = [
     { name = "404Spotter", email = "404spotter@gmail.com" }
 ]
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "tomli-w>=1.2.0",
+    "typer>=0.29.0",
+]
 
 [project.scripts]
 listlauncher = "listlauncher:main"
