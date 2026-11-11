@@ -5,6 +5,7 @@
     Works on Linux desktop distros (requires xdg-utils and Python 3.13)
 
 ## Usage
+
 '''bash
 Create New List:
     $ listlauncher new-list "list_name" 
@@ -18,7 +19,6 @@ View Executions Saved to List:
     $ listlauncher view "list_name"
 Launch List:
     $ listlauncher "list_name" 
-
 '''
 
 
