@@ -24,7 +24,7 @@ def new_list(
 
 @app.command()
 def add(name: str, target: str):
-    """Add a file, folder, or command (in quotes) to a list."""
+    """Add a file, folder, or command (in quotes) to a list.""" # Text in cli.
     try:
         item = core.add_item(name, target)
     except core.ListLauncherError as error:
