@@ -96,4 +96,3 @@ def main():
             # `listlauncher list1` -> `listlauncher run list1`
             sys.argv.insert(1, "run")
     app()
-
