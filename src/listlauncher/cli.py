@@ -26,10 +26,10 @@ def new_list(
 def add(name: str, target: str):
     """Add a file, folder, or command (in quotes) to a list.""" # Text in cli.
     try:
-        item = core.add_item(name, target)
+        entry = core.add_entry(name, target)
     except core.ListLauncherError as error:
         fail(error)
-    typer.echo(f"Added {item['type']} to '{name}'")
+    typer.echo(f"Added {entry['type']} to '{name}'")
 
 @app.command()
 def run(name: str):
@@ -39,25 +39,52 @@ def run(name: str):
     except core.ListLauncherError as error:
         fail(error)
 
-    for item, reason in failed:
-        typer.secho(f"Failed to launch {item}: {reason}", fg="yellow", err=True)
+    for entry, reason in failed:
+        typer.secho(f"Failed to launch {entry}: {reason}", fg="yellow", err=True)
 
 @app.command()
 def view(name: str):
     """View everything saved to a list."""
     try:
-        items = core.get_items(name)
+        entries = core.get_entries(name)
     except core.ListLauncherError as error:
         fail(error)
 
-    if not items:
-        typer.echo(f"'{name}' is empty. Add items with `listlauncher add {name} TARGET`")
+    if not entries:
+        typer.echo(f"'{name}' is empty. Add entries with `listlauncher add {name} TARGET`")
         return
 
     typer.secho(name, bold=True)
-    for number, item in enumerate(items, start=1):
-        typer.echo(f"  {number}. [{item['type']}] {core.describe_item(item)}")
+    for number, entry in enumerate(entries, start=1):
+        typer.echo(f"  {number}. [{entry['type']}] {core.describe_entry(entry)}")
 
+@app.command()
+def rm(name: str, target: str):
+    """Remove an entry from a list by its position in the view list or by its full entry"""
+    try:
+        entry = core.remove_entry(name, target)
+    except core.ListLauncherError as error:
+        fail(error)
+    typer.echo(f"Removed {core.describe_entry(entry)} from '{name}'")
+
+@app.command()
+def rm_list(name: str):
+    """Remove list"""
+    try:
+        core.delete_list(name)
+    except core.ListLauncherError as error:
+        fail(error)
+    typer.echo(f"Deleted List: '{name}'")
+
+@app.command()
+def lists():
+    """List all Lists"""
+    names = core.get_list_names()
+    if not names:
+        typer.echo("No lists yet.")
+        return
+    for name in names:
+        typer.echo(name)
 def main():
     commands = typer.main.get_command(app).commands
     args = sys.argv[1:]

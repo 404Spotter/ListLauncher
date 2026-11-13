@@ -30,33 +30,61 @@ def new_list(name):
         raise ListLauncherError("List names can only use letters, numbers, - and _")
     if list_path(name).exists():
         raise ListLauncherError(f"A list called '{name}' already exists")
-    save_list(name, {"name": name, "items": []})
+    save_list(name, {"name": name, "entries": []})
 
-# Add Command
-def add_item(name, target):
+# Add an entry to a list
+def add_entry(name, target):
     if not list_path(name).exists():
         raise ListLauncherError(f"No list named '{name}'")
     data = load_list(name)
     path = Path(target)
     if path.exists():
-        item = {"type": "path", "path": str(path.resolve())}
+        entry = {"type": "path", "path": str(path.resolve())}
     else: 
         args = shlex.split(target)
         if not args or shutil.which(os.path.expanduser(args[0])) is None:
             raise ListLauncherError(
                 f"'{target}' isn't an existing file or folder, or a command on your PATH"
             )
-        item = {"type": "command", "run": args}
-    data["items"].append(item)
+        entry = {"type": "command", "run": args}
+    data["entries"].append(entry)
     save_list(name, data)
-    return item
+    return entry
 
-# Executing Items from lists
-def launch_item(item):
-    if item["type"] == "path":
-        command = ["xdg-open", item["path"]]
+# Remove an Entry from a List
+def remove_entry(name, target):
+    if not list_path(name).exists():
+        raise ListLauncherError(f"No list named '{name}'")
+    data = load_list(name)
+    entries = data["entries"]
+    if target.isdecimal():
+        index = int(target) - 1
+        if not 0 <= index < len(entries):
+            raise ListLauncherError(f"'{name}' has no number {target}")
+    else:
+        as_path = str(Path(target).resolve())
+        as_command = shlex.split(target)
+        for index, entry in enumerate(entries):
+            if entry.get("path") == as_path or entry.get("run") == as_command:
+                break
+        else:
+            raise ListLauncherError(f"'{target}' isnt in '{name}")
+        
+    removed = entries.pop(index)
+    save_list(name, data)
+    return removed
+
+# Delete a List
+def delete_list(name):
+    if not list_path(name).exists():
+        raise ListLauncherError(f"No list named '{name}'")
+    list_path(name).unlink()
+# Executing entries from lists
+def launch_entry(entry):
+    if entry["type"] == "path":
+        command = ["xdg-open", entry["path"]]
     else: 
-        command = [os.path.expanduser(arg) for arg in item["run"]]
+        command = [os.path.expanduser(arg) for arg in entry["run"]]
     subprocess.Popen(
         command,
         start_new_session=True,
@@ -64,29 +92,33 @@ def launch_item(item):
         stderr=subprocess.DEVNULL,
     )
 
+# Get All List Names
+def get_list_names():
+        return sorted(path.stem for path in CONFIG_DIR.glob("*.toml"))
+
 def run_list(name):
     if not list_path(name).exists():
         raise ListLauncherError(f"No list called '{name}'")
 
-    items = load_list(name)["items"]
-    if not items:
-        raise ListLauncherError(f"'{name}' is empty. Add items with `listlauncher add`")
+    entries = load_list(name)["entries"]
+    if not entries:
+        raise ListLauncherError(f"'{name}' is empty. Add entries with `listlauncher add`")
 
     failed = []
-    for item in items:
+    for entry in entries:
         try:
-            launch_item(item)
+            launch_entry(entry)
         except OSError as error:
-            failed.append((item, str(error)))
+            failed.append((entry, str(error)))
     return failed
 
-# Get items from a List
-def get_items(name):
+# Get entries from a List
+def get_entries(name):
     if not list_path(name).exists():
         raise ListLauncherError(f"No list named '{name}'")
-    return load_list(name)["items"]
+    return load_list(name)["entries"]
 
-def describe_item(item):
-    if item["type"] == "path":
-        return item["path"]
-    return shlex.join(item["run"])
+def describe_entry(entry):
+    if entry["type"] == "path":
+        return entry["path"]
+    return shlex.join(entry["run"])

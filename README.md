@@ -21,10 +21,16 @@
 
   # Launch everything in the list
   listlauncher work
+
+  # Remove an Entry from A List
+  listlauncher list_name rm "_"
+
+  # Delete a List
+  listlauncher rm-list list_name
+
+  # View All Saved Lists
+  listlauncher lists
 ```
-
-
-
 
 
 
